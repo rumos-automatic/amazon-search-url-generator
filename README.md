@@ -37,7 +37,10 @@ clasp push
 ### 2. 使用方法
 
 1. A列に ASIN を入力
-2. メニュー「Amazon URL生成」→「すべて処理」を実行
+2. メニュー「Amazon URL生成」から処理方式を選択
+   - **ブランド絞り込み** - `p_89` パラメータでブランド指定（推奨）
+   - **キーワード検索** - 従来のキーワード検索方式
+   - **ハイブリッド** - 両方を併用した厳格な絞り込み
 3. 自動で以下が入力されます：
    - B列: ブランド名
    - C列: カテゴリコード
@@ -46,8 +49,9 @@ clasp push
 
 ### カスタムメニュー
 
-- **すべて処理**: 未処理の行（B列が空）をすべて処理
-- **選択行のみ処理**: 選択した行のみ処理
+- **ブランド絞り込み**: `rh=p_89:Brand` でブランド完全指定（推奨）
+- **キーワード検索**: `k=Brand` で従来のキーワード検索
+- **ハイブリッド**: `k=Brand&rh=p_89:Brand` で両方併用
 
 ## 設定
 
@@ -99,13 +103,31 @@ amazon-search-url-generator/
 
 ### URL 形式
 
+#### ブランド絞り込み（推奨）
 ```
-https://www.amazon.com/s?k={ブランド名}&i={カテゴリ}&s={ソートパラメータ}
+https://www.amazon.com/s?rh=i:{カテゴリ},p_89:{ブランド名}&s={ソート}
+```
+例:
+```
+https://www.amazon.com/s?rh=i:tools,p_89:LOCHBY&s=date-desc-rank
 ```
 
+#### キーワード検索（従来）
+```
+https://www.amazon.com/s?k={ブランド名}&i={カテゴリ}&s={ソート}
+```
 例:
 ```
 https://www.amazon.com/s?k=LOCHBY&i=tools&s=date-desc-rank
+```
+
+#### ハイブリッド
+```
+https://www.amazon.com/s?k={ブランド名}&rh=p_89:{ブランド名}&i={カテゴリ}&s={ソート}
+```
+例:
+```
+https://www.amazon.com/s?k=LOCHBY&rh=p_89:LOCHBY&i=tools&s=date-desc-rank
 ```
 
 ## 🆕 Keepa API 対応（v2.2.0）

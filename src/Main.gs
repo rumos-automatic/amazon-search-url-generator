@@ -10,136 +10,43 @@
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Amazon URL生成')
-    .addItem('【Keepa API】すべて処理', 'processInBatchesWithKeepa')
-    .addItem('【Keepa API】選択行のみ処理', 'processSelectedRowsWithKeepa')
-    .addSeparator()
-    .addItem('【スクレイピング】すべて処理', 'processInBatchesWithScraping')
-    .addItem('【スクレイピング】選択行のみ処理', 'processSelectedRowsWithScraping')
-    .addSeparator()
-    .addSubMenu(ui.createMenu('トリガー設定（自動処理）')
-      .addItem('10分おきの自動処理を開始', 'setupKeepaScheduler')
-      .addItem('自動処理を停止', 'removeKeepaScheduler')
-      .addItem('今すぐ手動実行', 'processKeepaScheduled'))
-    .addSeparator()
-    .addItem('初期設定（Keepa設定・カテゴリマッピング）', 'initializeKeepaSheets')
+    .addItem('ブランド絞り込み', 'processAllWithBrandFilter')
+    .addItem('キーワード検索', 'processAllWithKeyword')
+    .addItem('ハイブリッド', 'processAllWithHybrid')
     .addToUi();
 }
 
 /**
- * Keepa APIですべて処理
+ * ブランド絞り込み方式で処理（推奨）
+ * rh=i:category,p_89:Brand&s=sort
  */
-function processInBatchesWithKeepa() {
-  processInBatchesGeneric(getAmazonDataViaKeepa);
+function processAllWithBrandFilter() {
+  processInBatchesGeneric(getAmazonDataViaKeepa, 'brand_filter');
 }
 
 /**
- * Keepa APIで選択行のみ処理
+ * キーワード検索方式で処理（従来）
+ * k=Brand&i=category&s=sort
  */
-function processSelectedRowsWithKeepa() {
-  processSelectedRowsGeneric(getAmazonDataViaKeepa);
+function processAllWithKeyword() {
+  processInBatchesGeneric(getAmazonDataViaKeepa, 'keyword');
 }
 
 /**
- * スクレイピングですべて処理
+ * ハイブリッド方式で処理
+ * k=Brand&rh=p_89:Brand&i=category&s=sort
  */
-function processInBatchesWithScraping() {
-  processInBatchesGeneric(getAmazonData);
-}
-
-/**
- * スクレイピングで選択行のみ処理
- */
-function processSelectedRowsWithScraping() {
-  processSelectedRowsGeneric(getAmazonData);
-}
-
-/**
- * 選択された行のみ処理（汎用版）
- * @param {function} getDataFunction - データ取得関数（getAmazonData または getAmazonDataViaKeepa）
- */
-function processSelectedRowsGeneric(getDataFunction) {
-  try {
-    const config = loadConfig();
-    const sheet = SpreadsheetApp.getActiveSheet();
-    const selection = sheet.getActiveRange();
-
-    if (!selection) {
-      SpreadsheetApp.getUi().alert('情報', '行を選択してください。', SpreadsheetApp.getUi().ButtonSet.OK);
-      return;
-    }
-
-    const startRow = selection.getRow();
-    const numRows = selection.getNumRows();
-    const asinColumn = columnLetterToIndex(config.ASIN_COLUMN);
-
-    let processedCount = 0;
-    let errorCount = 0;
-
-    for (let i = 0; i < numRows; i++) {
-      const rowNum = startRow + i;
-      if (rowNum < 2) continue; // ヘッダー行をスキップ
-
-      const asin = sheet.getRange(rowNum, asinColumn).getValue();
-
-      if (!asin || asin.toString().trim() === '') {
-        continue;
-      }
-
-      Logger.log(`Processing row ${rowNum}: ASIN = ${asin}`);
-
-      const data = getDataFunction(asin);
-
-      if (data.error) {
-        Logger.log(`Error for ASIN ${asin}: ${data.error}`);
-        writeRowData(sheet, rowNum, config, {
-          brand: `エラー: ${data.error}`,
-          category: '',
-          newUrl: '',
-          relevanceUrl: ''
-        });
-        errorCount++;
-      } else {
-        const newUrl = createHyperlink(
-          buildSearchUrl(data.brand, config.SORT_NEW_PARAM, data.category),
-          config.NEW_LABEL
-        );
-        const relevanceUrl = createHyperlink(
-          buildSearchUrl(data.brand, config.SORT_RELEVANCE_PARAM, data.category),
-          config.RELEVANCE_LABEL
-        );
-
-        writeRowData(sheet, rowNum, config, {
-          brand: data.brand,
-          category: data.category,
-          newUrl: newUrl,
-          relevanceUrl: relevanceUrl
-        });
-        processedCount++;
-      }
-
-      if (i < numRows - 1) {
-        Utilities.sleep(config.WAIT_TIME_MS);
-      }
-    }
-
-    SpreadsheetApp.getUi().alert(
-      '完了',
-      `処理完了\n成功: ${processedCount}件\nエラー: ${errorCount}件`,
-      SpreadsheetApp.getUi().ButtonSet.OK
-    );
-
-  } catch (error) {
-    Logger.log(`Error in processSelectedRows: ${error.message}`);
-    SpreadsheetApp.getUi().alert('エラー', `処理中にエラーが発生しました: ${error.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
-  }
+function processAllWithHybrid() {
+  processInBatchesGeneric(getAmazonDataViaKeepa, 'hybrid');
 }
 
 /**
  * 未処理の行をバッチ処理（設定で指定された件数ごとにシートに保存）
  * 既に処理済み（ブランド列に値がある）の行はスキップ
- * @param {function} getDataFunction - データ取得関数（getAmazonData または getAmazonDataViaKeepa）
+ * @param {function} getDataFunction - データ取得関数（getAmazonDataViaKeepa）
+ * @param {string} urlType - URL生成方式（'brand_filter', 'keyword', 'hybrid'）
  */
-function processInBatchesGeneric(getDataFunction) {
+function processInBatchesGeneric(getDataFunction, urlType) {
   try {
     const config = loadConfig();
     const sheet = getTargetSheet(config.TARGET_SHEET_NAME);
@@ -188,13 +95,13 @@ function processInBatchesGeneric(getDataFunction) {
           relevanceUrl: ''
         });
       } else {
-        // URL生成（カテゴリを含む）
+        // URL生成（カテゴリを含む、URL方式を指定）
         const newUrl = createHyperlink(
-          buildSearchUrl(data.brand, config.SORT_NEW_PARAM, data.category),
+          buildSearchUrl(data.brand, config.SORT_NEW_PARAM, data.category, urlType),
           config.NEW_LABEL
         );
         const relevanceUrl = createHyperlink(
-          buildSearchUrl(data.brand, config.SORT_RELEVANCE_PARAM, data.category),
+          buildSearchUrl(data.brand, config.SORT_RELEVANCE_PARAM, data.category, urlType),
           config.RELEVANCE_LABEL
         );
 

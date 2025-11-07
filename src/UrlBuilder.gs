@@ -8,30 +8,50 @@
  * @param {string} brand - ブランド名
  * @param {string} sortParam - ソートパラメータ（例: "date-desc-rank"）
  * @param {string} category - カテゴリコード（例: "hpc"）オプション
+ * @param {string} urlType - URL生成方式（'brand_filter', 'keyword', 'hybrid'）デフォルト: 'brand_filter'
  * @return {string} Amazon検索URL
  */
-function buildSearchUrl(brand, sortParam, category) {
+function buildSearchUrl(brand, sortParam, category, urlType) {
   if (!brand || brand === 'N/A' || brand.startsWith('エラー:')) {
     return '';
   }
 
+  // デフォルトはブランド絞り込み方式
+  urlType = urlType || 'brand_filter';
+
   const baseUrl = 'https://www.amazon.com/s';
-  const encodedBrand = encodeSearchTerm(brand);
+  const encodedBrand = encodeURIComponent(brand);
+  const encodedCategory = category && category.trim() !== '' ? encodeURIComponent(category) : '';
 
-  // クエリパラメータを構築
-  const params = [
-    `k=${encodedBrand}`
-  ];
+  // URL方式に応じて異なるパラメータ構成を生成
+  switch(urlType) {
+    case 'brand_filter':
+      // ブランド絞り込み方式: rh=i:category,p_89:Brand&s=sort
+      if (encodedCategory) {
+        return `${baseUrl}?rh=i:${encodedCategory},p_89:${encodedBrand}&s=${sortParam}`;
+      } else {
+        return `${baseUrl}?rh=p_89:${encodedBrand}&s=${sortParam}`;
+      }
 
-  // カテゴリがある場合は追加（iパラメータ形式）
-  if (category && category.trim() !== '') {
-    params.push(`i=${category}`);
+    case 'hybrid':
+      // ハイブリッド方式: k=Brand&rh=p_89:Brand&i=category&s=sort
+      const hybridParams = [`k=${encodedBrand}`, `rh=p_89:${encodedBrand}`];
+      if (encodedCategory) {
+        hybridParams.push(`i=${encodedCategory}`);
+      }
+      hybridParams.push(`s=${sortParam}`);
+      return `${baseUrl}?${hybridParams.join('&')}`;
+
+    case 'keyword':
+    default:
+      // キーワード検索方式（従来）: k=Brand&i=category&s=sort
+      const keywordParams = [`k=${encodedBrand}`];
+      if (encodedCategory) {
+        keywordParams.push(`i=${encodedCategory}`);
+      }
+      keywordParams.push(`s=${sortParam}`);
+      return `${baseUrl}?${keywordParams.join('&')}`;
   }
-
-  // ソートパラメータを追加
-  params.push(`s=${sortParam}`);
-
-  return `${baseUrl}?${params.join('&')}`;
 }
 
 /**

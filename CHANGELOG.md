@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3.0] - 2025-11-07
+
+### Added - ブランド絞り込みURL対応
+- **3つのURL生成方式をメニューから選択可能**
+  - ブランド絞り込み（`rh=p_89:Brand`）- 推奨
+  - キーワード検索（`k=Brand`）- 従来方式
+  - ハイブリッド（`k=Brand&rh=p_89:Brand`）- 最も厳格
+- **シンプルな3メニュー構成**
+  - スクレイピング、トリガー設定、初期設定メニューを削除
+  - Keepa API専用のクリーンな構成
+
+### Changed
+- `src/Main.gs` - メニューを3つのシンプルな構成に変更
+  - `processAllWithBrandFilter()` - ブランド絞り込み方式
+  - `processAllWithKeyword()` - キーワード検索方式
+  - `processAllWithHybrid()` - ハイブリッド方式
+  - `processInBatchesGeneric()` に `urlType` パラメータ追加
+- `src/UrlBuilder.gs` - `buildSearchUrl()` に `urlType` パラメータ追加
+  - switch文で3方式を実装（brand_filter/keyword/hybrid）
+  - デフォルトは `brand_filter`（ブランド絞り込み）
+- README.md - 3つのURL方式の説明を追加
+
+### Removed
+- 選択行のみ処理機能（シンプル化のため）
+- スクレイピング関連メニューとfunctions
+- トリガー設定メニュー
+- 初期設定メニュー
+
+### Technical Details
+- **ブランド絞り込み方式**: `https://www.amazon.com/s?rh=i:category,p_89:Brand&s=sort`
+  - Amazonの `p_89` パラメータでブランドを完全指定
+  - 他の商品が混ざるリスクを大幅に削減
+- **キーワード検索方式**: `https://www.amazon.com/s?k=Brand&i=category&s=sort`
+  - 従来のキーワード検索方式
+- **ハイブリッド方式**: `https://www.amazon.com/s?k=Brand&rh=p_89:Brand&i=category&s=sort`
+  - キーワードとブランド絞り込みの両方を併用
+
 ## [2.2.0] - 2025-11-07
 
 ### Added - Keepa API 自動処理スケジューラー
