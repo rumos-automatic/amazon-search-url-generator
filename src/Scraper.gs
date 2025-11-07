@@ -22,7 +22,7 @@ function getAmazonData(asin) {
   // 失敗時のエラーメッセージを詳細化
   let errorMessage = data.error;
   if (!errorMessage && data.brand === 'N/A') {
-    errorMessage = 'HTTP 200 OK だがブランド抽出失敗（5段階フォールバックすべて）';
+    errorMessage = 'HTTP 200 OK だがブランド抽出失敗（3段階フォールバックすべて）';
   } else if (!errorMessage) {
     errorMessage = '不明なエラー';
   }
@@ -83,17 +83,18 @@ function fetchAmazonPage(asin, baseUrl, source) {
 
     const html = response.getContentText();
 
-    // ブランド名を抽出（5段階フォールバック）
+    // ブランド名を抽出（3段階フォールバック）
     let brand = extractBrandFromProductOverview(html);
     if (!brand) {
       brand = extractBrandFromByline(html);
     }
-    if (!brand) {
-      brand = extractBrandFromProductDetails(html);
-    }
-    if (!brand) {
-      brand = extractManufacturerFromProductDetails(html);
-    }
+    // Product Details のフォールバックは一時的に無効化（パフォーマンス問題）
+    // if (!brand) {
+    //   brand = extractBrandFromProductDetails(html);
+    // }
+    // if (!brand) {
+    //   brand = extractManufacturerFromProductDetails(html);
+    // }
     if (!brand) {
       brand = extractBrandFromTitle(html);
     }
