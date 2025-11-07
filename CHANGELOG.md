@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.3] - 2025-11-07
+
+### Added - 手動実行時のトークン情報更新
+- **手動実行時にもKeepa APIトークン残数を自動更新**
+  - 「ブランド絞り込み」「キーワード検索」「ハイブリッド」メニューから手動実行時にF列のトークン情報を更新
+  - タイムアウト/エラー/正常終了すべてで確実に更新（finally節を使用）
+  - 処理完了後、F列に最新のトークン残数と更新日時が表示される
+
+### Changed
+- `src/Main.gs` - `processInBatchesGeneric()` にfinally節を追加
+  - `getKeepaTokensLeft()` でトークン残数を取得
+  - `updateHeaderWithTokenInfo()` でF列に表示
+  - 6分タイムアウトで中断された場合でもトークン情報を更新
+
+### Technical Details
+- finally節により、処理の終了方法（正常/エラー/タイムアウト）に関わらず必ずトークン情報を更新
+- トークン取得エラーはログに記録するが、処理自体は継続
+- 自動トリガー処理は従来通り処理中にトークン情報を更新（変更なし）
+
 ## [2.4.2] - 2025-11-07
 
 ### Added - トリガー設定状況の表示
