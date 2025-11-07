@@ -1,0 +1,213 @@
+/**
+ * Amazon Search URL Generator - Scraper.gs
+ * Amazonからブランド名とカテゴリをスクレイピング
+ */
+
+/**
+ * ASINからAmazon商品データを取得
+ * Amazon.comのみから取得
+ * @param {string} asin - Amazon ASIN
+ * @return {Object} {asin, brand, category, source, error}
+ */
+function getAmazonData(asin) {
+  // Amazon.com から取得
+  Logger.log(`Fetching from Amazon.com for ASIN: ${asin}`);
+  const data = fetchAmazonPage(asin, 'https://www.amazon.com/dp/', 'US');
+
+  if (data.brand && data.brand !== 'N/A' && !data.error) {
+    Logger.log(`Successfully fetched from Amazon.com: ${asin}`);
+    return data;
+  }
+
+  // 失敗
+  Logger.log(`Failed to fetch data from Amazon.com for ASIN: ${asin}`);
+  return {
+    asin: asin,
+    brand: null,
+    category: null,
+    source: 'US',
+    error: data.error || '取得失敗'
+  };
+}
+
+/**
+ * 指定されたAmazonサイトから商品データを取得
+ * @param {string} asin - Amazon ASIN
+ * @param {string} baseUrl - ベースURL（例: 'https://www.amazon.co.jp/dp/'）
+ * @param {string} source - 取得元（'JP' または 'US'）
+ * @return {Object} {asin, brand, category, source, error}
+ */
+function fetchAmazonPage(asin, baseUrl, source) {
+  try {
+    const url = `${baseUrl}${asin}`;
+    Logger.log(`Fetching: ${url}`);
+
+    const response = UrlFetchApp.fetch(url, {
+      muteHttpExceptions: true,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': source === 'JP' ? 'ja,en-US;q=0.9,en;q=0.8' : 'en-US,en;q=0.5'
+      }
+    });
+
+    const statusCode = response.getResponseCode();
+    if (statusCode !== 200) {
+      Logger.log(`HTTP ${statusCode} for ${url}`);
+      return {
+        asin: asin,
+        brand: null,
+        category: null,
+        source: source,
+        error: `HTTP ${statusCode}`
+      };
+    }
+
+    const html = response.getContentText();
+
+    // ブランド名を抽出（3段階フォールバック）
+    let brand = extractBrandFromProductOverview(html);
+    if (!brand) {
+      brand = extractBrandFromByline(html);
+    }
+    if (!brand) {
+      brand = extractBrandFromTitle(html);
+    }
+
+    // カテゴリを抽出（2段階フォールバック）
+    let category = extractCategoryFromDropdown(html);
+    if (!category) {
+      category = extractCategoryFromNavSubnav(html);
+    }
+
+    return {
+      asin: asin,
+      brand: brand || 'N/A',
+      category: category || '',
+      source: source,
+      error: null
+    };
+
+  } catch (error) {
+    Logger.log(`Error fetching from ${baseUrl}${asin}: ${error.message}`);
+    return {
+      asin: asin,
+      brand: null,
+      category: null,
+      source: source,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 優先1: productOverview の po-brand テーブル行からブランド名を抽出
+ * @param {string} html - HTML文字列
+ * @return {string|null} ブランド名
+ */
+function extractBrandFromProductOverview(html) {
+  try {
+    // <tr class="...po-brand..."> ... <td class="a-span9"> ... <span>Brand Name</span>
+    const pattern = /<tr[^>]*class="[^"]*po-brand[^"]*"[^>]*>[\s\S]*?<td\s+class="a-span9"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i;
+    const match = html.match(pattern);
+
+    if (match && match[1]) {
+      const brand = match[1].trim();
+      Logger.log(`Brand extracted from productOverview: ${brand}`);
+      return brand;
+    }
+  } catch (error) {
+    Logger.log(`Error in extractBrandFromProductOverview: ${error.message}`);
+  }
+  return null;
+}
+
+/**
+ * 優先2: bylineInfo から "Visit the {Brand} Store" 形式でブランド名を抽出
+ * @param {string} html - HTML文字列
+ * @return {string|null} ブランド名
+ */
+function extractBrandFromByline(html) {
+  try {
+    // <a id="bylineInfo" ...>Visit the Brand Store</a>
+    const pattern = /<a\s+id="bylineInfo"[^>]*>Visit\s+the\s+(.+?)\s+Store<\/a>/i;
+    const match = html.match(pattern);
+
+    if (match && match[1]) {
+      const brand = match[1].trim();
+      Logger.log(`Brand extracted from bylineInfo: ${brand}`);
+      return brand;
+    }
+  } catch (error) {
+    Logger.log(`Error in extractBrandFromByline: ${error.message}`);
+  }
+  return null;
+}
+
+/**
+ * 優先3: productTitle の最初の単語をブランド名として抽出
+ * @param {string} html - HTML文字列
+ * @return {string|null} ブランド名
+ */
+function extractBrandFromTitle(html) {
+  try {
+    // <span id="productTitle" ...>Brand Name Product Title...</span>
+    const pattern = /<span\s+id="productTitle"[^>]*>([^<]+)<\/span>/i;
+    const match = html.match(pattern);
+
+    if (match && match[1]) {
+      const title = match[1].trim();
+      // 最初の単語を取得
+      const firstWord = title.split(/\s+/)[0];
+      Logger.log(`Brand extracted from productTitle (first word): ${firstWord}`);
+      return firstWord;
+    }
+  } catch (error) {
+    Logger.log(`Error in extractBrandFromTitle: ${error.message}`);
+  }
+  return null;
+}
+
+/**
+ * 優先1: 検索ドロップダウンの selected option からカテゴリを抽出
+ * @param {string} html - HTML文字列
+ * @return {string|null} カテゴリコード（例: "hpc"）
+ */
+function extractCategoryFromDropdown(html) {
+  try {
+    // <option selected="selected" ... value="search-alias=hpc">...</option>
+    const pattern = /<option[^>]*selected="selected"[^>]*value="search-alias=([^"]+)"/i;
+    const match = html.match(pattern);
+
+    if (match && match[1]) {
+      const category = match[1].trim();
+      Logger.log(`Category extracted from dropdown: ${category}`);
+      return category;
+    }
+  } catch (error) {
+    Logger.log(`Error in extractCategoryFromDropdown: ${error.message}`);
+  }
+  return null;
+}
+
+/**
+ * 優先2: nav-subnav の data-category 属性からカテゴリを抽出
+ * @param {string} html - HTML文字列
+ * @return {string|null} カテゴリコード
+ */
+function extractCategoryFromNavSubnav(html) {
+  try {
+    // <div id="nav-subnav" data-category="hpc">
+    const pattern = /id="nav-subnav"[^>]*data-category="([^"]+)"/i;
+    const match = html.match(pattern);
+
+    if (match && match[1]) {
+      const category = match[1].trim();
+      Logger.log(`Category extracted from nav-subnav: ${category}`);
+      return category;
+    }
+  } catch (error) {
+    Logger.log(`Error in extractCategoryFromNavSubnav: ${error.message}`);
+  }
+  return null;
+}
