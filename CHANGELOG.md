@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] - 2025-11-07
+
+### Added
+- ブランド名抽出のフォールバックを2つ追加（3段階 → 5段階）
+  - Product Details テーブルの "Brand Name" 行から抽出
+  - Product Details テーブルの "Manufacturer" 行から抽出
+
+### Changed
+- ブランド抽出の優先順位を更新:
+  1. productOverview (po-brand テーブル)
+  2. bylineInfo ("Visit the {Brand} Store")
+  3. Product Details (Brand Name) ← 新規
+  4. Product Details (Manufacturer) ← 新規
+  5. productTitle (最初の単語)
+
+### Technical Details
+- HTML エンティティ (`&amp;` → `&`) を正しく変換
+- Product Details テーブルの正規表現パターンマッチング
+
 ## [1.0.0] - 2025-11-07
 
 ### Added

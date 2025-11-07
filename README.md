@@ -89,11 +89,13 @@ amazon-search-url-generator/
 ### データ取得
 
 - **取得元**: Amazon.com のみ
-- **ブランド抽出**:
+- **ブランド抽出（5段階フォールバック）**:
   1. `productOverview` の `po-brand` テーブル行
   2. `bylineInfo` の "Visit the {Brand} Store" パターン
-  3. `productTitle` の最初の単語（フォールバック）
-- **カテゴリ抽出**:
+  3. Product Details テーブルの "Brand Name" 行
+  4. Product Details テーブルの "Manufacturer" 行
+  5. `productTitle` の最初の単語（最終フォールバック）
+- **カテゴリ抽出（2段階フォールバック）**:
   1. 検索ドロップダウンの selected option の value
   2. `nav-subnav` の `data-category` 属性（フォールバック）
 

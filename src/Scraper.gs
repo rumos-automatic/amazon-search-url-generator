@@ -65,10 +65,16 @@ function fetchAmazonPage(asin, baseUrl, source) {
 
     const html = response.getContentText();
 
-    // ブランド名を抽出（3段階フォールバック）
+    // ブランド名を抽出（5段階フォールバック）
     let brand = extractBrandFromProductOverview(html);
     if (!brand) {
       brand = extractBrandFromByline(html);
+    }
+    if (!brand) {
+      brand = extractBrandFromProductDetails(html);
+    }
+    if (!brand) {
+      brand = extractManufacturerFromProductDetails(html);
     }
     if (!brand) {
       brand = extractBrandFromTitle(html);
@@ -208,6 +214,50 @@ function extractCategoryFromNavSubnav(html) {
     }
   } catch (error) {
     Logger.log(`Error in extractCategoryFromNavSubnav: ${error.message}`);
+  }
+  return null;
+}
+
+/**
+ * 優先4: Product Details の "Brand Name" 行からブランド名を抽出
+ * @param {string} html - HTML文字列
+ * @return {string|null} ブランド名
+ */
+function extractBrandFromProductDetails(html) {
+  try {
+    // <th>Brand Name</th> <td>Melissa & Doug</td>
+    const pattern = /<th[^>]*>[\s\n]*Brand[\s\n]+Name[\s\n]*<\/th>[\s\n]*<td[^>]*>[\s\n]*([^<]+)[\s\n]*<\/td>/i;
+    const match = html.match(pattern);
+
+    if (match && match[1]) {
+      const brand = match[1].trim().replace(/&amp;/g, '&');
+      Logger.log(`Brand extracted from Product Details (Brand Name): ${brand}`);
+      return brand;
+    }
+  } catch (error) {
+    Logger.log(`Error in extractBrandFromProductDetails: ${error.message}`);
+  }
+  return null;
+}
+
+/**
+ * 優先5: Product Details の "Manufacturer" 行からブランド名を抽出
+ * @param {string} html - HTML文字列
+ * @return {string|null} ブランド名
+ */
+function extractManufacturerFromProductDetails(html) {
+  try {
+    // <th>Manufacturer</th> <td>Melissa & Doug</td>
+    const pattern = /<th[^>]*>[\s\n]*Manufacturer[\s\n]*<\/th>[\s\n]*<td[^>]*>[\s\n]*([^<]+)[\s\n]*<\/td>/i;
+    const match = html.match(pattern);
+
+    if (match && match[1]) {
+      const brand = match[1].trim().replace(/&amp;/g, '&');
+      Logger.log(`Brand extracted from Product Details (Manufacturer): ${brand}`);
+      return brand;
+    }
+  } catch (error) {
+    Logger.log(`Error in extractManufacturerFromProductDetails: ${error.message}`);
   }
   return null;
 }
