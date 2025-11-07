@@ -104,7 +104,7 @@ function processInBatchesGeneric(getDataFunction, urlType) {
           category: '',
           newUrl: '',
           relevanceUrl: ''
-        });
+        }, urlType);
       } else {
         // URL生成（カテゴリを含む、URL方式を指定）
         const newUrl = createHyperlink(
@@ -121,7 +121,7 @@ function processInBatchesGeneric(getDataFunction, urlType) {
           category: data.category,
           newUrl: newUrl,
           relevanceUrl: relevanceUrl
-        });
+        }, urlType);
       }
 
       processedCount++;

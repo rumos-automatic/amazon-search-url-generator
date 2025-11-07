@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.1] - 2025-11-07
+
+### Added - URL方式をF列に記録
+- **F列に各行のURL生成方式を記録**
+  - 1行目: トークン情報（既存のまま）
+  - 2行目以降: `ブランド絞り込み` / `キーワード検索` / `ハイブリッド`
+  - どの方式でURLを生成したか一目で確認可能
+
+### Changed
+- `src/SheetManager.gs` - `writeRowData()` に `urlType` パラメータを追加
+- `src/Main.gs` - `writeRowData()` 呼び出しに `urlType` を渡すように修正
+- `src/KeepaScheduler.gs` - `writeRowData()` 呼び出しに `urlType` を渡すように修正
+- README.md - スプレッドシート構成にF列を追加
+
+### Technical Details
+- F列にURL方式のラベル（日本語）を記録
+- `urlType` パラメータはオプション（未指定の場合は記録しない）
+- スプレッドシート構成: A列=ASIN, B列=ブランド, C列=カテゴリ, D列=新着順URL, E列=関連順URL, F列=URL方式
+
 ## [2.4.0] - 2025-11-07
 
 ### Added - URL方式別トリガー設定

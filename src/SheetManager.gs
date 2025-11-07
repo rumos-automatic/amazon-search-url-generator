@@ -55,8 +55,9 @@ function getTargetSheet(sheetName) {
  * @param {number} rowNum - 行番号（1から開始）
  * @param {Object} config - 設定オブジェクト
  * @param {Object} data - データオブジェクト {brand, category, newUrl, relevanceUrl, source}
+ * @param {string} urlType - URL生成方式（'brand_filter', 'keyword', 'hybrid'）オプション
  */
-function writeRowData(sheet, rowNum, config, data) {
+function writeRowData(sheet, rowNum, config, data, urlType) {
   try {
     const brandCol = columnLetterToIndex(config.BRAND_COLUMN);
     const categoryCol = columnLetterToIndex(config.CATEGORY_COLUMN);
@@ -89,6 +90,18 @@ function writeRowData(sheet, rowNum, config, data) {
       } else {
         sheet.getRange(rowNum, relevanceUrlCol).setValue(data.relevanceUrl);
       }
+    }
+
+    // F列にURL方式を記録
+    if (urlType) {
+      const urlTypeColumn = columnLetterToIndex('F');
+      const urlTypeLabels = {
+        'brand_filter': 'ブランド絞り込み',
+        'keyword': 'キーワード検索',
+        'hybrid': 'ハイブリッド'
+      };
+      const urlTypeLabel = urlTypeLabels[urlType] || urlType;
+      sheet.getRange(rowNum, urlTypeColumn).setValue(urlTypeLabel);
     }
 
   } catch (error) {

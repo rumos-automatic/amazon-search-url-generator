@@ -496,7 +496,7 @@ function processKeepaScheduledGeneric(urlType) {
           category: '',
           newUrl: '',
           relevanceUrl: ''
-        });
+        }, urlType);
         errorCount++;
       } else {
         // 成功の場合（urlTypeを渡す）
@@ -514,7 +514,7 @@ function processKeepaScheduledGeneric(urlType) {
           category: data.category,
           newUrl: newUrl,
           relevanceUrl: relevanceUrl
-        });
+        }, urlType);
         successCount++;
         currentTokens--;  // トークンを1つ消費
       }
