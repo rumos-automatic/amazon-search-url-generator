@@ -359,6 +359,13 @@ function setupKeepaSchedulerGeneric(functionName, label) {
 
     Logger.log(`${label} 自動処理トリガーを設定しました（10分おき）`);
 
+    // トリガー状態を更新
+    const config = loadConfig();
+    const sheet = getTargetSheet(config.TARGET_SHEET_NAME);
+    if (sheet) {
+      updateTriggerStatus(sheet);
+    }
+
   } catch (error) {
     Logger.log(`Error in setupKeepaSchedulerGeneric: ${error.message}`);
     SpreadsheetApp.getUi().alert('エラー', `トリガー設定に失敗しました: ${error.message}`, SpreadsheetApp.getUi().ButtonSet.OK);
@@ -396,6 +403,13 @@ function removeKeepaSchedulerGeneric(functionName, label) {
         SpreadsheetApp.getUi().ButtonSet.OK
       );
       Logger.log(`${label} のトリガーが見つかりませんでした`);
+    }
+
+    // トリガー状態を更新
+    const config = loadConfig();
+    const sheet = getTargetSheet(config.TARGET_SHEET_NAME);
+    if (sheet) {
+      updateTriggerStatus(sheet);
     }
 
   } catch (error) {
@@ -536,6 +550,12 @@ function processKeepaScheduledGeneric(urlType) {
 
     // ヘッダー行のトークン情報を更新
     updateHeaderWithTokenInfo(sheet, currentTokens, status);
+
+    // 最終実行日時を記録してトリガー状態を更新
+    const now = new Date();
+    const formatted = Utilities.formatDate(now, Session.getScriptTimeZone(), 'HH:mm');
+    PropertiesService.getScriptProperties().setProperty('LAST_TRIGGER_EXECUTION', formatted);
+    updateTriggerStatus(sheet);
 
   } catch (error) {
     Logger.log(`Error in processKeepaScheduledGeneric: ${error.message}`);

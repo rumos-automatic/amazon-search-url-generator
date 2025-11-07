@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.2] - 2025-11-07
+
+### Added - トリガー設定状況の表示
+- **G1-J1にトリガー設定状況を表示**
+  - G1: アクティブトリガー（例: ブランド絞り込み, キーワード検索）
+  - H1: 次回実行予定時刻（概算、例: 12:45）
+  - I1: 実行間隔（10分おき）
+  - J1: 最終実行日時（例: 12:35）
+  - トリガー設定/削除/実行時に自動更新
+
+### Changed
+- `src/SheetManager.gs` - `updateTriggerStatus()` 関数を追加
+- `src/KeepaScheduler.gs` - トリガー設定/削除/実行時に `updateTriggerStatus()` を呼び出し
+  - `setupKeepaSchedulerGeneric()`: トリガー設定時に状態更新
+  - `removeKeepaSchedulerGeneric()`: トリガー削除時に状態更新
+  - `processKeepaScheduledGeneric()`: 実行時に最終実行日時を記録して状態更新
+- README.md - スプレッドシート構成にトリガー状態（G1-J1）を追加
+
+### Technical Details
+- トリガー情報を `ScriptApp.getProjectTriggers()` で取得
+- 最終実行日時を `PropertiesService.getScriptProperties()` に保存
+- G1-J1セルに小さめフォント（9pt）、灰色で表示
+- 次回実行時刻は概算（現在時刻+10分）で表示
+
 ## [2.4.1] - 2025-11-07
 
 ### Added - URL方式をF列に記録

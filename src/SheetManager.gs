@@ -372,3 +372,71 @@ function updateHeaderWithTokenInfo(sheet, tokensLeft, status) {
     Logger.log(`Error in updateHeaderWithTokenInfo: ${error.message}`);
   }
 }
+
+/**
+ * トリガー設定状況をG1-J1に表示
+ * @param {Sheet} sheet - シートオブジェクト
+ */
+function updateTriggerStatus(sheet) {
+  try {
+    const triggers = ScriptApp.getProjectTriggers();
+
+    // トリガー関数名のマッピング
+    const triggerNames = {
+      'processKeepaScheduledBrandFilter': 'ブランド絞り込み',
+      'processKeepaScheduledKeyword': 'キーワード検索',
+      'processKeepaScheduledHybrid': 'ハイブリッド'
+    };
+
+    const activeTriggers = [];
+
+    triggers.forEach(trigger => {
+      const funcName = trigger.getHandlerFunction();
+      if (triggerNames[funcName]) {
+        activeTriggers.push(triggerNames[funcName]);
+      }
+    });
+
+    // G1: アクティブトリガー
+    if (activeTriggers.length > 0) {
+      sheet.getRange('G1').setValue(activeTriggers.join(', '));
+    } else {
+      sheet.getRange('G1').setValue('なし');
+    }
+
+    // H1: 次回実行（概算）
+    if (activeTriggers.length > 0) {
+      const now = new Date();
+      const next = new Date(now.getTime() + 10 * 60 * 1000); // 10分後と仮定
+      const nextStr = Utilities.formatDate(next, Session.getScriptTimeZone(), 'HH:mm');
+      sheet.getRange('H1').setValue(nextStr);
+    } else {
+      sheet.getRange('H1').setValue('-');
+    }
+
+    // I1: 実行間隔
+    if (activeTriggers.length > 0) {
+      sheet.getRange('I1').setValue('10分おき');
+    } else {
+      sheet.getRange('I1').setValue('-');
+    }
+
+    // J1: 最終実行（プロパティサービスから取得）
+    const lastExecution = PropertiesService.getScriptProperties().getProperty('LAST_TRIGGER_EXECUTION');
+    if (lastExecution) {
+      sheet.getRange('J1').setValue(lastExecution);
+    } else {
+      sheet.getRange('J1').setValue('-');
+    }
+
+    // フォント設定
+    const statusRange = sheet.getRange('G1:J1');
+    statusRange.setFontSize(9);
+    statusRange.setFontColor('#666666');
+
+    Logger.log(`Trigger status updated: ${activeTriggers.join(', ')}`);
+
+  } catch (error) {
+    Logger.log(`Error in updateTriggerStatus: ${error.message}`);
+  }
+}
