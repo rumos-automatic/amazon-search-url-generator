@@ -19,14 +19,21 @@ function getAmazonData(asin) {
     return data;
   }
 
-  // 失敗
-  Logger.log(`Failed to fetch data from Amazon.com for ASIN: ${asin}`);
+  // 失敗時のエラーメッセージを詳細化
+  let errorMessage = data.error;
+  if (!errorMessage && data.brand === 'N/A') {
+    errorMessage = 'HTTP 200 OK だがブランド抽出失敗（5段階フォールバックすべて）';
+  } else if (!errorMessage) {
+    errorMessage = '不明なエラー';
+  }
+
+  Logger.log(`Failed to fetch data from Amazon.com for ASIN: ${asin} - ${errorMessage}`);
   return {
     asin: asin,
     brand: null,
     category: null,
     source: 'US',
-    error: data.error || '取得失敗'
+    error: errorMessage
   };
 }
 
@@ -53,13 +60,24 @@ function fetchAmazonPage(asin, baseUrl, source) {
 
     const statusCode = response.getResponseCode();
     if (statusCode !== 200) {
-      Logger.log(`HTTP ${statusCode} for ${url}`);
+      // HTTPステータスコード名を追加
+      const statusMessages = {
+        403: 'Forbidden (アクセス拒否・レート制限の可能性)',
+        404: 'Not Found (商品が存在しない)',
+        503: 'Service Unavailable (Amazon一時エラー)',
+        500: 'Internal Server Error (Amazonサーバーエラー)',
+        429: 'Too Many Requests (リクエスト過多)'
+      };
+      const statusMessage = statusMessages[statusCode] || `エラー (ステータス: ${statusCode})`;
+      const errorMsg = `HTTP ${statusCode}: ${statusMessage}`;
+
+      Logger.log(`${errorMsg} for ${url}`);
       return {
         asin: asin,
         brand: null,
         category: null,
         source: source,
-        error: `HTTP ${statusCode}`
+        error: errorMsg
       };
     }
 
@@ -95,13 +113,27 @@ function fetchAmazonPage(asin, baseUrl, source) {
     };
 
   } catch (error) {
-    Logger.log(`Error fetching from ${baseUrl}${asin}: ${error.message}`);
+    // エラーメッセージを詳細化
+    let errorMsg = error.message || '不明なエラー';
+
+    // タイムアウトエラーを判定
+    if (errorMsg.toLowerCase().includes('timeout')) {
+      errorMsg = `タイムアウト: ${errorMsg}`;
+    } else if (errorMsg.toLowerCase().includes('dns')) {
+      errorMsg = `DNS解決エラー: ${errorMsg}`;
+    } else if (errorMsg.toLowerCase().includes('network')) {
+      errorMsg = `ネットワークエラー: ${errorMsg}`;
+    } else {
+      errorMsg = `例外エラー: ${errorMsg}`;
+    }
+
+    Logger.log(`Error fetching from ${baseUrl}${asin}: ${errorMsg}`);
     return {
       asin: asin,
       brand: null,
       category: null,
       source: source,
-      error: error.message
+      error: errorMsg
     };
   }
 }

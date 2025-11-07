@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - ブランド名抽出のフォールバックを2つ追加（3段階 → 5段階）
   - Product Details テーブルの "Brand Name" 行から抽出
   - Product Details テーブルの "Manufacturer" 行から抽出
+- **エラーメッセージの詳細化**
+  - HTTPエラー: `HTTP 403: Forbidden (アクセス拒否・レート制限の可能性)`
+  - ブランド抽出失敗: `HTTP 200 OK だがブランド抽出失敗（5段階フォールバックすべて）`
+  - タイムアウト: `タイムアウト: {詳細メッセージ}`
+  - ネットワークエラー: `ネットワークエラー: {詳細メッセージ}`
+  - その他: `例外エラー: {詳細メッセージ}`
 
 ### Changed
 - ブランド抽出の優先順位を更新:
@@ -18,10 +24,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   3. Product Details (Brand Name) ← 新規
   4. Product Details (Manufacturer) ← 新規
   5. productTitle (最初の単語)
+- エラーメッセージを Logger と同じレベルの詳細度に改善
 
 ### Technical Details
 - HTML エンティティ (`&amp;` → `&`) を正しく変換
 - Product Details テーブルの正規表現パターンマッチング
+- HTTPステータスコード別のエラーメッセージマッピング（403, 404, 429, 500, 503）
+- 例外エラーの種類別判定（timeout, dns, network）
 
 ## [1.0.0] - 2025-11-07
 
