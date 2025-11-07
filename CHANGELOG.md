@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.6] - 2025-11-07
+
+### Fixed - 手動実行時のトークン情報が更新されない問題を修正
+- **finally節で `sheet` と `config` にアクセスできない問題を修正**
+  - `sheet` と `config` を関数の先頭で宣言（tryブロックの外）
+  - finally節で `sheet` が null でないことを確認してからトークン情報を更新
+  - 処理成功時に正しくF1列のトークン情報が更新されるように修正
+
+### Changed
+- `src/Main.gs` - `processInBatchesGeneric()` の変数宣言位置を変更
+  - `let sheet = null;` と `let config = null;` を関数の先頭（62-63行目）に追加
+  - finally節の条件を `if (processedCount > 0 && sheet)` に変更
+
 ## [2.4.5] - 2025-11-07
 
 ### Fixed - processedCount未定義エラーの修正

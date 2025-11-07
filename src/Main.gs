@@ -59,10 +59,12 @@ function processAllWithHybrid() {
  */
 function processInBatchesGeneric(getDataFunction, urlType) {
   let processedCount = 0;  // finally節でアクセスするため、先頭で宣言
+  let sheet = null;
+  let config = null;
 
   try {
-    const config = loadConfig();
-    const sheet = getTargetSheet(config.TARGET_SHEET_NAME);
+    config = loadConfig();
+    sheet = getTargetSheet(config.TARGET_SHEET_NAME);
 
     if (!sheet) {
       return;
@@ -152,7 +154,7 @@ function processInBatchesGeneric(getDataFunction, urlType) {
     // エラー時もダイアログは出さない
   } finally {
     // 処理が1件以上あった場合のみトークン情報更新
-    if (processedCount > 0) {
+    if (processedCount > 0 && sheet) {
       try {
         const tokensInfo = getKeepaTokensLeft();
         if (tokensInfo.success) {
