@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.5] - 2025-11-07
+
+### Fixed - processedCount未定義エラーの修正
+- **ReferenceError: processedCount is not defined を修正**
+  - `processedCount` を関数の先頭で宣言（tryブロックの外）
+  - 早期returnした場合でもfinally節で参照可能に
+
+### Changed
+- `src/Main.gs` - `processInBatchesGeneric()` の変数宣言位置を変更
+  - `let processedCount = 0;` を関数の先頭（61行目）に移動
+  - finally節で安全にアクセス可能
+
 ## [2.4.4] - 2025-11-07
 
 ### Changed - 処理0件時のトークン更新スキップ

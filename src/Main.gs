@@ -58,6 +58,8 @@ function processAllWithHybrid() {
  * @param {string} urlType - URL生成方式（'brand_filter', 'keyword', 'hybrid'）
  */
 function processInBatchesGeneric(getDataFunction, urlType) {
+  let processedCount = 0;  // finally節でアクセスするため、先頭で宣言
+
   try {
     const config = loadConfig();
     const sheet = getTargetSheet(config.TARGET_SHEET_NAME);
@@ -75,7 +77,6 @@ function processInBatchesGeneric(getDataFunction, urlType) {
     const brandColumn = columnLetterToIndex(config.BRAND_COLUMN);
     const batchSize = config.BATCH_SIZE || 10;
 
-    let processedCount = 0;
     let batchCount = 0;
 
     // 未処理の行をすべて処理
