@@ -46,9 +46,9 @@ function encodeSearchTerm(term) {
 }
 
 /**
- * HYPERLINK関数の文字列を生成
+ * HYPERLINK関数の文字列を生成（URLのみ表示）
  * @param {string} url - リンク先URL
- * @param {string} label - 表示ラベル
+ * @param {string} label - 表示ラベル（使用されません）
  * @return {string} =HYPERLINK() 形式の文字列
  */
 function createHyperlink(url, label) {
@@ -56,6 +56,6 @@ function createHyperlink(url, label) {
     return '';
   }
 
-  // HYPERLINKの場合、式として返す
-  return `=HYPERLINK("${url}", "${label}")`;
+  // HYPERLINKでURLのみ表示（ラベルなし）
+  return `=HYPERLINK("${url}")`;
 }

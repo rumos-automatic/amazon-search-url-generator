@@ -52,12 +52,13 @@ function getDefaultConfig() {
     NEW_URL_COLUMN: 'D',
     RELEVANCE_URL_COLUMN: 'E',
     TARGET_SHEET_NAME: '商品データ',
-    WAIT_TIME_MS: 2000,
+    WAIT_TIME_MS: 20000,  // 20秒に設定（ボット検知対策）
     BATCH_SIZE: 10,
     SORT_NEW_PARAM: 'date-desc-rank',
     SORT_RELEVANCE_PARAM: 'relevanceblender',
     NEW_LABEL: '新着順',
-    RELEVANCE_LABEL: '関連順'
+    RELEVANCE_LABEL: '関連順',
+    KEEPA_API_KEY: ''  // Keepa APIキー（設定シートで設定）
   };
 }
 

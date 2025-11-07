@@ -10,15 +10,54 @@
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Amazon URL生成')
-    .addItem('すべて処理', 'processInBatches')
-    .addItem('選択行のみ処理', 'processSelectedRows')
+    .addItem('【Keepa API】すべて処理', 'processInBatchesWithKeepa')
+    .addItem('【Keepa API】選択行のみ処理', 'processSelectedRowsWithKeepa')
+    .addSeparator()
+    .addItem('【スクレイピング】すべて処理', 'processInBatchesWithScraping')
+    .addItem('【スクレイピング】選択行のみ処理', 'processSelectedRowsWithScraping')
+    .addSeparator()
+    .addSubMenu(ui.createMenu('トリガー設定（自動処理）')
+      .addItem('10分おきの自動処理を開始', 'setupKeepaScheduler')
+      .addItem('自動処理を停止', 'removeKeepaScheduler')
+      .addItem('今すぐ手動実行', 'processKeepaScheduled'))
+    .addSeparator()
+    .addItem('初期設定（Keepa設定・カテゴリマッピング）', 'initializeKeepaSheets')
     .addToUi();
 }
 
 /**
- * 選択された行のみ処理
+ * Keepa APIですべて処理
  */
-function processSelectedRows() {
+function processInBatchesWithKeepa() {
+  processInBatchesGeneric(getAmazonDataViaKeepa);
+}
+
+/**
+ * Keepa APIで選択行のみ処理
+ */
+function processSelectedRowsWithKeepa() {
+  processSelectedRowsGeneric(getAmazonDataViaKeepa);
+}
+
+/**
+ * スクレイピングですべて処理
+ */
+function processInBatchesWithScraping() {
+  processInBatchesGeneric(getAmazonData);
+}
+
+/**
+ * スクレイピングで選択行のみ処理
+ */
+function processSelectedRowsWithScraping() {
+  processSelectedRowsGeneric(getAmazonData);
+}
+
+/**
+ * 選択された行のみ処理（汎用版）
+ * @param {function} getDataFunction - データ取得関数（getAmazonData または getAmazonDataViaKeepa）
+ */
+function processSelectedRowsGeneric(getDataFunction) {
   try {
     const config = loadConfig();
     const sheet = SpreadsheetApp.getActiveSheet();
@@ -48,7 +87,7 @@ function processSelectedRows() {
 
       Logger.log(`Processing row ${rowNum}: ASIN = ${asin}`);
 
-      const data = getAmazonData(asin);
+      const data = getDataFunction(asin);
 
       if (data.error) {
         Logger.log(`Error for ASIN ${asin}: ${data.error}`);
@@ -98,8 +137,9 @@ function processSelectedRows() {
 /**
  * 未処理の行をバッチ処理（設定で指定された件数ごとにシートに保存）
  * 既に処理済み（ブランド列に値がある）の行はスキップ
+ * @param {function} getDataFunction - データ取得関数（getAmazonData または getAmazonDataViaKeepa）
  */
-function processInBatches() {
+function processInBatchesGeneric(getDataFunction) {
   try {
     const config = loadConfig();
     const sheet = getTargetSheet(config.TARGET_SHEET_NAME);
@@ -137,7 +177,7 @@ function processInBatches() {
       Logger.log(`Processing row ${rowNum}: ASIN = ${asin}`);
 
       // Amazon データ取得
-      const data = getAmazonData(asin);
+      const data = getDataFunction(asin);
 
       if (data.error) {
         Logger.log(`Error for ASIN ${asin}: ${data.error}`);

@@ -61,7 +61,7 @@ clasp push
 | NEW_URL_COLUMN | D | 新着順URL列の位置 |
 | RELEVANCE_URL_COLUMN | E | 関連順URL列の位置 |
 | TARGET_SHEET_NAME | 商品データ | 処理対象シート名 |
-| WAIT_TIME_MS | 2000 | リクエスト間隔（ミリ秒） |
+| WAIT_TIME_MS | 20000 | リクエスト間隔（ミリ秒） |
 | BATCH_SIZE | 10 | バッチ処理の件数 |
 | SORT_NEW_PARAM | date-desc-rank | 新着順ソートパラメータ |
 | SORT_RELEVANCE_PARAM | relevanceblender | 関連順ソートパラメータ |
@@ -108,11 +108,48 @@ https://www.amazon.com/s?k={ブランド名}&i={カテゴリ}&s={ソートパラ
 https://www.amazon.com/s?k=LOCHBY&i=tools&s=date-desc-rank
 ```
 
+## 🆕 Keepa API 対応（v2.2.0）
+
+**Bot認定を回避する安定版として、Keepa APIに対応しました！**
+
+### 新機能
+
+- ✅ **Keepa API 統合** - 公式APIで安定したデータ取得
+- ✅ **自動処理スケジューラー** - 10分おきに自動実行、放置でOK
+- ✅ **トークン残数の可視化** - ヘッダー行にリアルタイム表示
+- ✅ **カテゴリマッピング89種** - Amazon主要カテゴリを95%以上カバー
+- ✅ **カスタムメニュー拡張** - Keepa APIとスクレイピングを選択可能
+- ✅ **初期設定自動化** - メニューから簡単セットアップ
+
+### 使い方（自動処理）
+
+1. メニュー「Amazon URL生成」→「初期設定（Keepa設定・カテゴリマッピング）」を実行
+2. 「設定」シートに Keepa API Key を入力
+3. メニュー「トリガー設定（自動処理）」→「10分おきの自動処理を開始」をクリック
+4. あとは放置！自動的にデータ取得が完了します
+
+詳細は以下を参照：
+- [KEEPA_AUTO_SCHEDULER_GUIDE.md](./KEEPA_AUTO_SCHEDULER_GUIDE.md) - 自動処理ガイド
+- [KEEPA_SETUP_GUIDE.md](./KEEPA_SETUP_GUIDE.md) - セットアップガイド
+
+---
+
 ## 制限事項
 
-- Amazon.com の HTML 構造が変更されると動作しなくなる可能性があります
-- リクエスト間隔（デフォルト2秒）を設けているため、大量処理には時間がかかります
+### スクレイピング版
+
+- ⚠️ Amazon.com の HTML 構造が変更されると動作しなくなる可能性があります
+- ⚠️ Bot認定のリスクがあります
+- リクエスト間隔（デフォルト20秒）を設けているため、大量処理には時間がかかります
 - GAS の実行時間制限（6分）により、一度に大量の ASIN は処理できません
+
+### Keepa API版
+
+- 💰 有料（€19/月、約3,000円/月）
+- 基本プランは1トークン/分（1製品/分）
+- トークン消費に注意
+
+---
 
 ## ライセンス
 
