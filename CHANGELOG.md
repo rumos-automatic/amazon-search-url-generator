@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.4] - 2025-11-07
+
+### Changed - 処理0件時のトークン更新スキップ
+- **手動実行時に処理対象が0件の場合、トークン情報更新をスキップ**
+  - 処理が1件以上あった場合のみKeepa APIにトークン残数を問い合わせ
+  - 処理対象が0件の場合は即座に終了（無駄なトークン消費を防止）
+  - 処理速度が向上
+
+### Fixed
+- `src/Main.gs` - `processInBatchesGeneric()` のfinally節に条件追加
+  - `if (processedCount > 0)` でトークン更新をガード
+  - 全行がスキップされた場合にトークンを消費しなくなった
+
+### Technical Details
+- 処理件数が0件の場合、`getKeepaTokensLeft()` を呼び出さない
+- 自動トリガー処理は処理前にトークン確認が必要なため変更なし
+
 ## [2.4.3] - 2025-11-07
 
 ### Added - 手動実行時のトークン情報更新

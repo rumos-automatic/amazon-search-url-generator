@@ -150,14 +150,16 @@ function processInBatchesGeneric(getDataFunction, urlType) {
     Logger.log(`Error in processInBatches: ${error.message}`);
     // エラー時もダイアログは出さない
   } finally {
-    // トークン情報更新（タイムアウト/エラー/正常終了すべてで実行）
-    try {
-      const tokensInfo = getKeepaTokensLeft();
-      if (tokensInfo.success) {
-        updateHeaderWithTokenInfo(sheet, tokensInfo.tokensLeft, '処理完了');
+    // 処理が1件以上あった場合のみトークン情報更新
+    if (processedCount > 0) {
+      try {
+        const tokensInfo = getKeepaTokensLeft();
+        if (tokensInfo.success) {
+          updateHeaderWithTokenInfo(sheet, tokensInfo.tokensLeft, '処理完了');
+        }
+      } catch (finallyError) {
+        Logger.log(`トークン情報更新エラー: ${finallyError.message}`);
       }
-    } catch (finallyError) {
-      Logger.log(`トークン情報更新エラー: ${finallyError.message}`);
     }
   }
 }
