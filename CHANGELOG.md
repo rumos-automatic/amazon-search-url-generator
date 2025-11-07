@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.0] - 2025-11-07
+
+### Added - URL方式別トリガー設定
+- **トリガー設定メニューを追加**
+  - 各URL生成方式（ブランド絞り込み/キーワード検索/ハイブリッド）ごとに独立したトリガー設定が可能
+  - サブサブメニュー構造: トリガー設定 → 方式選択 → 開始/停止
+  - 10分おきの自動処理を方式別に設定・停止可能
+
+### Changed
+- `src/Main.gs` - トリガー設定サブメニューを追加（3つのサブサブメニュー）
+- `src/KeepaScheduler.gs` - 9つの新関数を追加
+  - ブランド絞り込み用: `setup/remove/processScheduledBrandFilter`
+  - キーワード検索用: `setup/remove/processScheduledKeyword`
+  - ハイブリッド用: `setup/remove/processScheduledHybrid`
+  - 汎用ヘルパー: `setupGeneric`, `removeGeneric`, `processScheduledGeneric`
+- README.md - トリガー設定メニューの説明を追加
+
+### Technical Details
+- 各方式ごとに独立したトリガー関数を持つため、複数の方式を同時に自動実行可能
+- `processKeepaScheduledGeneric(urlType)` で汎用的な自動処理ロジックを実装
+- URL生成時に `urlType` パラメータを渡してブランド絞り込み/キーワード検索/ハイブリッドを制御
+
 ## [2.3.0] - 2025-11-07
 
 ### Added - ブランド絞り込みURL対応

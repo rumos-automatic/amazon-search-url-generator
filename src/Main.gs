@@ -13,6 +13,17 @@ function onOpen() {
     .addItem('ブランド絞り込み', 'processAllWithBrandFilter')
     .addItem('キーワード検索', 'processAllWithKeyword')
     .addItem('ハイブリッド', 'processAllWithHybrid')
+    .addSeparator()
+    .addSubMenu(ui.createMenu('トリガー設定')
+      .addSubMenu(ui.createMenu('ブランド絞り込み')
+        .addItem('10分おきの自動処理を開始', 'setupKeepaSchedulerBrandFilter')
+        .addItem('自動処理を停止', 'removeKeepaSchedulerBrandFilter'))
+      .addSubMenu(ui.createMenu('キーワード検索')
+        .addItem('10分おきの自動処理を開始', 'setupKeepaSchedulerKeyword')
+        .addItem('自動処理を停止', 'removeKeepaSchedulerKeyword'))
+      .addSubMenu(ui.createMenu('ハイブリッド')
+        .addItem('10分おきの自動処理を開始', 'setupKeepaSchedulerHybrid')
+        .addItem('自動処理を停止', 'removeKeepaSchedulerHybrid')))
     .addToUi();
 }
 
