@@ -374,7 +374,7 @@ function updateHeaderWithTokenInfo(sheet, tokensLeft, status) {
 }
 
 /**
- * トリガー設定状況をG1-J1に表示
+ * トリガー設定状況をK1-N1に表示
  * @param {Sheet} sheet - シートオブジェクト
  */
 function updateTriggerStatus(sheet) {
@@ -397,40 +397,40 @@ function updateTriggerStatus(sheet) {
       }
     });
 
-    // G1: アクティブトリガー
+    // K1: アクティブトリガー
     if (activeTriggers.length > 0) {
-      sheet.getRange('G1').setValue(activeTriggers.join(', '));
+      sheet.getRange('K1').setValue(activeTriggers.join(', '));
     } else {
-      sheet.getRange('G1').setValue('なし');
+      sheet.getRange('K1').setValue('なし');
     }
 
-    // H1: 次回実行（概算）
+    // L1: 次回実行（概算）
     if (activeTriggers.length > 0) {
       const now = new Date();
       const next = new Date(now.getTime() + 10 * 60 * 1000); // 10分後と仮定
       const nextStr = Utilities.formatDate(next, Session.getScriptTimeZone(), 'HH:mm');
-      sheet.getRange('H1').setValue(nextStr);
+      sheet.getRange('L1').setValue(nextStr);
     } else {
-      sheet.getRange('H1').setValue('-');
+      sheet.getRange('L1').setValue('-');
     }
 
-    // I1: 実行間隔
+    // M1: 実行間隔
     if (activeTriggers.length > 0) {
-      sheet.getRange('I1').setValue('10分おき');
+      sheet.getRange('M1').setValue('10分おき');
     } else {
-      sheet.getRange('I1').setValue('-');
+      sheet.getRange('M1').setValue('-');
     }
 
-    // J1: 最終実行（プロパティサービスから取得）
+    // N1: 最終実行（プロパティサービスから取得）
     const lastExecution = PropertiesService.getScriptProperties().getProperty('LAST_TRIGGER_EXECUTION');
     if (lastExecution) {
-      sheet.getRange('J1').setValue(lastExecution);
+      sheet.getRange('N1').setValue(lastExecution);
     } else {
-      sheet.getRange('J1').setValue('-');
+      sheet.getRange('N1').setValue('-');
     }
 
     // フォント設定
-    const statusRange = sheet.getRange('G1:J1');
+    const statusRange = sheet.getRange('K1:N1');
     statusRange.setFontSize(9);
     statusRange.setFontColor('#666666');
 

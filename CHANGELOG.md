@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.7] - 2025-11-07
+
+### Changed - トリガー設定状況の表示位置をK1-N1に変更
+- **トリガー設定状況の表示位置をG1-J1からK1-N1に変更**
+  - F1: Keepaトークン情報（変更なし）
+  - G1-J1: 空白（以前はトリガー状態）
+  - K1-N1: トリガー状態（アクティブトリガー、次回実行、実行間隔、最終実行）
+
+### Changed
+- `src/SheetManager.gs` - `updateTriggerStatus()` 関数の表示位置を変更
+  - G1 → K1（アクティブトリガー）
+  - H1 → L1（次回実行）
+  - I1 → M1（実行間隔）
+  - J1 → N1（最終実行）
+  - G1:J1 → K1:N1（フォント設定範囲）
+
 ## [2.4.6] - 2025-11-07
 
 ### Fixed - 手動実行時のトークン情報が更新されない問題を修正
